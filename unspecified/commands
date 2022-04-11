@@ -1,0 +1,46 @@
+sudo docker run -p 8000:8000 amazon/dynamodb-local & 
+
+aws dynamodb create-table \
+    --endpoint-url http://localhost:8000 \
+    --table-name TestTbl \
+    --attribute-definitions AttributeName=Idx,AttributeType=S \
+    --key-schema AttributeName=Idx,KeyType=HASH \
+    --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+
+aws dynamodb delete-table \
+    --endpoint-url http://localhost:8000 \
+    --table-name TestTbl \
+
+aws dynamodb put-item \
+    --endpoint-url http://localhost:8000 \
+    --table-name TestTbl \
+    --item '{
+        "Idx": {"S": "1"},
+        "Val": {"S": "Test1Val"} 
+      }' \
+    --return-consumed-capacity TOTAL
+
+aws dynamodb put-item \
+    --endpoint-url http://localhost:8000 \
+    --table-name TestTbl \
+    --item '{
+        "Idx": {"S": "2"},
+        "Val": {"S": "Test2Val"} 
+      }' \
+    --return-consumed-capacity TOTAL
+
+aws dynamodb query --table-name TestTbl \
+    --endpoint-url http://localhost:8000 \
+    --key-condition-expression "Idx = :v1" \
+    --expression-attribute-values '{":v1": {"S": "1"}}'
+
+
+
+
+
+#new entries
+comm -23 <(sort input_file.txt) <(sort ./oldfiles/$(date +%Y-%m-%d -d "1 day ago")_input_file.txt)
+
+#removed entries
+comm -13 <(sort input_file.txt) <(sort ./oldfiles/$(date +%Y-%m-%d -d "1 day ago")_input_file.txt)
+
